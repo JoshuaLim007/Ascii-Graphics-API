@@ -3,14 +3,12 @@
 Renderer *Renderer::Instance = NULL;
 Renderer::Renderer()
 {
-
     Init();
 }
-Renderer::Renderer(uint_fast8_t camVerticalSize, uint_fast8_t camHorizontalSize)
+Renderer::Renderer(uint_fast16_t camVerticalSize, uint_fast16_t camHorizontalSize)
 {
-    cameraVerticalSize = camVerticalSize;
-    cameraHorizontalSize = camHorizontalSize;
-
+    m_scr_height = camVerticalSize;
+    m_scr_width = camHorizontalSize;
     Init();
 }
 void Renderer::Init()
@@ -19,33 +17,35 @@ void Renderer::Init()
     {
         Instance = this;
     }
-    CameraWorldPosition.x = 0; //float(cameraHorizontalSize) / 2.0f;
-    CameraWorldPosition.y = 0; //float(cameraVerticalSize) / 2.0f;
-
-#ifdef _WIN32
-    bufScreen = new CHAR_INFO[cameraHorizontalSize * cameraVerticalSize];
-    memset(bufScreen, 0, sizeof(CHAR_INFO) * cameraHorizontalSize * cameraVerticalSize);
-    create_window_console(cameraHorizontalSize, cameraVerticalSize, 2, 2);
-#endif
-#ifdef __unix__
-
-#endif
+    else {
+        throw std::runtime_error("Renderer Instance Exists!");
+        return;
+    }
+    create_window_console(m_scr_width, m_scr_height, 4, 4);
 }
 
-#ifdef _WIN32
-void Renderer::create_window_console(int width, int height, int fontw, int fonth)
+int Renderer::create_window_console(int width, int height, int fontw, int fonth)
 {
-    rectWindow = {0, 0, 1, 1};
-    SetConsoleWindowInfo(hConsole, TRUE, &rectWindow);
-
-    COORD coord = {(short)cameraHorizontalSize, (short)cameraVerticalSize};
-    SetConsoleScreenBufferSize(hConsole, coord);
-    SetConsoleActiveScreenBuffer(hConsole);
-
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    short swidth = short(width - 1);
-    short sheight = short(height - 1);
+    rectWindow = {0, 0, 1, 1};
+    if (!SetConsoleWindowInfo(hConsole, TRUE, &rectWindow)) {
+        throw std::runtime_error("SetConsoleWindowInfo");
+        return -1;
+    }
 
+    COORD coord = {(short)m_scr_width, (short)m_scr_height};
+    
+    if (!SetConsoleScreenBufferSize(hConsole, coord)) {
+        throw std::runtime_error("SetConsoleScreenBufferSize");
+        return -1;
+    }
+
+    if (!SetConsoleActiveScreenBuffer(hConsole)) {
+        throw std::runtime_error("SetConsoleActiveScreenBuffer");
+        return -1;
+    }
+
+#pragma region Font
     CONSOLE_FONT_INFOEX cfi;
     cfi.cbSize = sizeof(cfi);
     cfi.nFont = 0;
@@ -54,87 +54,46 @@ void Renderer::create_window_console(int width, int height, int fontw, int fonth
     cfi.FontFamily = FF_DONTCARE;
     cfi.FontWeight = FW_NORMAL;
     wcscpy_s(cfi.FaceName, L"Consolas");
-    SetCurrentConsoleFontEx(hConsole, false, &cfi);
+    if (!SetCurrentConsoleFontEx(hConsole, false, &cfi)) {
+        throw std::runtime_error("SetCurrentConsoleFontEx");
+    }
+#pragma endregion
 
-    rectWindow = {0, 0, swidth, sheight};
-    SetConsoleWindowInfo(hConsole, TRUE, &rectWindow);
+#pragma region WindowSet
+    rectWindow = { 0, 0, (short)m_scr_width - 1, (short)m_scr_height - 1 };
+    if (!SetConsoleWindowInfo(hConsole, TRUE, &rectWindow)) {
+        throw std::runtime_error("SetConsoleWindowInfo");
+        return -1;
+    }
+    if (!SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT)) {
+        throw std::runtime_error("SetConsoleMode");
+        return -1;
+    }
+#pragma endregion
 
-    SetConsoleMode(hConsole, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT);
-
+#pragma region Cursor
     CONSOLE_CURSOR_INFO ConCurInf;
-    ConCurInf.dwSize = 10;
     ConCurInf.bVisible = false;
-    SetConsoleCursorInfo(hConsole, &ConCurInf);
+    ConCurInf.dwSize = 100;
+    if (!SetConsoleCursorInfo(hConsole, &ConCurInf)) {
+        throw std::runtime_error("SetConsoleCursorInfo");
+        return -1;
+    }
+#pragma endregion
 
-#pragma region Extra settings
-    /*
-    if (!SetConsoleScreenBufferSize(hConsole, coord))
-    {
-        std::cout << "SetConsoleScreenBufferSize Error!" << endl;
-        __throw_system_error('a');
-    }
-    
-    if (!SetConsoleActiveScreenBuffer(hConsole))
-    {
-        std::cout << "SetConsoleActiveScreenBuffer Error!" << endl;
-        __throw_system_error('b');
-    }
-    
-    CONSOLE_FONT_INFOEX cfi;
-    cfi.cbSize = sizeof(cfi);
-    cfi.nFont = 0;
-    cfi.dwFontSize.X = fontw;
-    cfi.dwFontSize.Y = fonth;
-    cfi.FontFamily = FF_DONTCARE;
-    cfi.FontWeight = FW_NORMAL;
-    wcscpy_s(cfi.FaceName, L"Consolas");
-    if (!SetCurrentConsoleFontEx(hConsole, false, &cfi))
-    {
-        std::cout << "SetCurrentConsoleFontEx Error!" << endl;
-        __throw_system_error('c');
-    }
-    
+    bufScreen = new CHAR_INFO[m_scr_width * m_scr_height];
+    memset(bufScreen, 0, sizeof(CHAR_INFO) * m_scr_width * m_scr_height);
 
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
-    {
-        std::cout << "GetConsoleScreenBufferInfo Error!" << endl;
-        __throw_system_error('d');
-    }
-    if (height > csbi.dwMaximumWindowSize.Y)
-    {
-        std::cout << "Font Error!" << endl;
-        __throw_system_error('e');
-    }
-    if (width > csbi.dwMaximumWindowSize.X)
-    {
-        std::cout << "Font Error!" << endl;
-        __throw_system_error('f');
-    }
-    
-    short sWidth = (short)(width - 1);
-    short sHeight = (short)(height - 1);
-    rectWindow = {0, 0, sWidth, sHeight};
-    if (!SetConsoleWindowInfo(hConsole, TRUE, &rectWindow))
-    {
-        std::cout << "SetConsoleWindowInfo Error!" << endl;
-        __throw_system_error('g');
-    }
-    if (!SetConsoleMode(hConsole, ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT))
-    {
-        std::cout << "SetConsoleMode Error!" << endl;
-        __throw_system_error('h');
-    }
-    */
+    HWND consoleWindow = GetConsoleWindow();
+    SetWindowLong(consoleWindow, GWL_STYLE, GetWindowLong(consoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //prevent from being resized
 
-    //bufScreen = new CHAR_INFO[width * height];
-    //memset(bufScreen, 0, sizeof(CHAR_INFO) * width * height);
+    return 0;
 }
-#endif
+
 Renderer::~Renderer()
 {
     delete[] bufScreen;
-    screen_clear();
+    clear();
 }
 Renderer *Renderer::get_instance()
 {
@@ -142,31 +101,22 @@ Renderer *Renderer::get_instance()
 }
 void Renderer::render()
 {
-    for (int i = 0; i < toRenders.count(); i++)
-    {
-        toRenders[i]->on_draw();
-        draw_quad_material(toRenders[i]->get_position(), toRenders[i]->get_material());
+    for (auto it : toRenders) {
+        it->on_draw();
     }
-#ifdef _WIN32
-    WriteConsoleOutput(hConsole, bufScreen, {(short)cameraHorizontalSize, (short)cameraVerticalSize}, {0, 0}, &rectWindow);
-#endif
+    WriteConsoleOutput(hConsole, bufScreen, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
 }
-void Renderer::screen_clear()
+void Renderer::clear()
 {
-#ifdef _WIN32
-    for (int i = 0; i < cameraVerticalSize * cameraHorizontalSize; i++)
+    for (int i = 0; i < m_scr_height * m_scr_width; i++)
     {
         bufScreen[i].Char.AsciiChar = ' ';
         bufScreen[i].Attributes = 0x000F;
     }
-    WriteConsoleOutput(hConsole, bufScreen, {(short)cameraHorizontalSize, (short)cameraVerticalSize}, {0, 0}, &rectWindow);
-#endif
-#ifdef __unix__
-
-#endif
+    //WriteConsoleOutput(hConsole, bufScreen, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
 }
 
-void Renderer::set_camera_position(Vector2f pos)
+void Renderer::set_camera_position(const Vector2f& pos)
 {
     CameraWorldPosition = pos;
 }
@@ -174,87 +124,43 @@ Vector2f Renderer::get_camera_position()
 {
     return CameraWorldPosition;
 }
-void Renderer::add_rendereable_to_render_stack(Renderable *renderObject)
+std::vector<Renderable*>::iterator Renderer::add_renderable_to_render_stack(Renderable *renderObject)
 {
-    if (toRenders.count() == 0)
-    {
-        toRenders.add(renderObject);
-    }
-    else
-    {
-        Renderable *previous = NULL;
-        for (int i = 0; i < toRenders.count(); i++)
-        {
-            if (previous)
-            {
-                if (toRenders[i]->get_draw_order() >= renderObject->get_draw_order() && previous->get_draw_order() <= renderObject->get_draw_order())
-                {
-                    toRenders.insert_at(renderObject, i);
-                }
+    Renderable* last = NULL;
+    auto end = toRenders.begin();
+    for (int i = 0; end != toRenders.end(); end++) {
+        if (*end != NULL) {
+            if (renderObject->get_draw_order() <= (*end)->get_draw_order()) {
+                auto itr = toRenders.insert(end, renderObject);
+                return itr;
             }
-            else
-            {
-                if (toRenders[i]->get_draw_order() > renderObject->get_draw_order())
-                {
-                    toRenders.insert_at(renderObject, i);
-                }
-            }
-            previous = toRenders[i];
+        }
+        else {
+            auto itr = toRenders.insert(end, renderObject);
+            return itr;
         }
     }
+    //toRenders.insert(std::pair<int, Renderable*>(renderObject->get_draw_order(), renderObject));
 }
-void Renderer::draw_quad_material(Vector2f worldPosition, const Quad &toDraw)
+void Renderer::remove_renderable_to_render_stack(std::vector<Renderable*>::iterator renderObject)
 {
-    float xPos = toDraw.LocalSpacePosition.x + worldPosition.x - this->CameraWorldPosition.x;
-    float yPos = toDraw.LocalSpacePosition.y + worldPosition.y - this->CameraWorldPosition.y;
+    toRenders.erase(renderObject);
+    //toRenders.erase(renderObject->get_draw_order());
+}
+void Renderer::draw_sprite_material(Vector2f worldPosition, const Sprite &toDraw)
+{
 
-    float xHalfExt = toDraw.HalfExtents.x;
-    float yHalfExt = toDraw.HalfExtents.y;
-    float xScale = toDraw.Scale.x;
-    float yScale = toDraw.Scale.y;
-    float scaledXOffset = (xHalfExt * xScale);
-    float scaledYOffset = (yHalfExt * yScale);
-    float xOutLineSize = toDraw.OutlineSize * xScale;
-    float yOutLineSize = toDraw.OutlineSize * yScale;
 
-    float leftBound = xPos - scaledXOffset;
-    float rightBound = xPos + scaledXOffset;
-    float upBound = yPos - scaledYOffset;
-    float downBound = yPos + scaledYOffset;
-    float leftBoundOutline = leftBound + xOutLineSize;
-    float rightBoundOutline = rightBound - xOutLineSize;
-    float upBoundOutline = leftBound + yOutLineSize;
-    float downBoundOutline = downBound - yOutLineSize;
 
-    for (float x = leftBound; x <= rightBound; x++)
-    {
-        for (float y = upBound; y <= downBound; y++)
-        {
-            int ix = roundf(x);
-            int iy = roundf(y);
-            if (x >= 0 && x < cameraHorizontalSize && y >= 0 && y < cameraVerticalSize)
-            {
-                if (x < leftBoundOutline || x > rightBoundOutline || y < upBoundOutline || y > downBoundOutline)
-                {
-                    if (toDraw.BorderStyle != ' ')
-                    {
-#ifdef _WIN32
-                        bufScreen[iy * cameraHorizontalSize + ix].Char.AsciiChar = toDraw.BorderStyle;
-                        bufScreen[iy * cameraHorizontalSize + ix].Attributes = 0x000F;
-#endif
-                    }
-                }
-                else
-                {
-                    if (toDraw.FillStyle != ' ')
-                    {
-#ifdef _WIN32
-                        bufScreen[iy * cameraHorizontalSize + ix].Char.AsciiChar = toDraw.FillStyle;
-                        bufScreen[iy * cameraHorizontalSize + ix].Attributes = 0x000F;
-#endif
-                    }
-                }
-            }
-        }
-    }
+
+
+
+
+
+
+
+
+
+
+
 }

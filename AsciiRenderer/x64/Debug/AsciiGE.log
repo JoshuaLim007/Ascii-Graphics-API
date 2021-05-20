@@ -1,0 +1,6 @@
+﻿  main.cpp
+  Renderable.cpp
+  Renderer.cpp
+  Generating Code...
+E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\Renderer.cpp(144): warning C4715: 'Renderer::add_renderable_to_render_stack': not all control paths return a value
+  AsciiGE.vcxproj -> E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe

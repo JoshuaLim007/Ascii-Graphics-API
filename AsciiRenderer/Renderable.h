@@ -2,30 +2,32 @@
 #ifndef RENDERERABLE_H_
 #define RENDERERABLE_H_
 
-#include "Quad.h"
+#include "Sprite.h"
+#include <vector>
 
 class Renderable
 {
 private:
     void Init();
+    void Dump();
     unsigned int DrawOrder = 0;
-    Quad DrawMaterial;
+    std::vector<Renderable*>::iterator m_itrRef;
+    Sprite DrawMaterial;
     Vector2f WorldPosition = Vector2f::ZERO;
 
 protected:
-    Renderable(Vector2f, Quad);
+    Renderable(Vector2f, Sprite);
     Renderable();
-    Renderable(const Renderable &);
-    Renderable &operator=(const Renderable &);
+    ~Renderable();
 
 public:
-    Quad get_material();
-    void set_material(Quad);
+    Sprite get_material();
+    void set_material(Sprite);
     void set_draw_order(unsigned int);
     unsigned int get_draw_order();
     Vector2f get_position();
     void set_position(const Vector2f &);
-    virtual void on_draw() = 0;
+    virtual void on_draw() {};
 };
 
 #endif
