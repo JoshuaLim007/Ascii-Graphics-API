@@ -1,0 +1,4 @@
+﻿  main.cpp
+E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(21,22): warning C4129: 'T': unrecognized character escape sequence
+E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(30,22): warning C4129: 'T': unrecognized character escape sequence
+  AsciiGE.vcxproj -> E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe

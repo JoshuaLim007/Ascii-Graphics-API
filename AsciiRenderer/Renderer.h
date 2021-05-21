@@ -5,53 +5,68 @@
 #include <vector>
 #include <iostream>
 #include "Renderable.h"
-#include "List.h"
+#include <map>
 #include <cstdint>
 #include <math.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-#ifdef __unix__
-#include <ncurses.h>
-#endif
-
-//#define showCursor() printf("\e[?25h")
-//#define hideCursor() printf("\e[?25l")
-//#define clear() printf("\e[1;1H\e[2J")
-//#define gotoxy(x, y) printf("\033[%d;%dH", (y + 1), (x + 1))
-
-using namespace std;
+#include <Windows.h>
+#include <chrono>
+#include <ctime>
 
 class Renderer
 {
 private:
     static Renderer *Instance;
-    List<Renderable *> toRenders;
-    uint_fast8_t cameraVerticalSize = 16;
-    uint_fast8_t cameraHorizontalSize = 16;
-    Vector2f CameraWorldPosition;
+    std::vector<Renderable*> toRenders;
 
-#ifdef _WIN32
-    CHAR_INFO *bufScreen;
+    uint_fast16_t m_scr_height = 200;
+    uint_fast16_t m_scr_width = 300;
+    uint_fast8_t x_fontSize = 4;
+    uint_fast8_t y_fontSize = 4;
+    Vector2f CameraWorldPosition = Vector2f::ZERO;
+
+    std::chrono::steady_clock::time_point start_time, end_time;
+    double frameTime = 0.01;
+
+    CHAR_INFO* render_buffer = NULL;
+    unsigned int* render_buffer_depth = NULL;
+    int currentTextX = 0;
+    int currentTextY = 0;
+
+
     SMALL_RECT rectWindow;
     HANDLE hConsole;
-    void create_window_console(int, int, int, int);
-#endif
-#ifdef __unix__
-#endif
-    void draw_quad_material(Vector2f, const Quad &);
+    int create_window_console(int, int, int, int);
+    void draw_sprite_material(const Renderable& toDraw);
     void Init();
 
 public:
     static Renderer *get_instance();
     Renderer();
     ~Renderer();
-    Renderer(uint_fast8_t, uint_fast8_t);
-    void add_rendereable_to_render_stack(Renderable *);
+    Renderer(uint_fast16_t, uint_fast16_t, uint_fast8_t, uint_fast8_t);
+    void add_renderable_to_render_stack(Renderable*);
+    
+    void remove_renderable_to_render_stack(Renderable*);
+
+    void setOutputTextPosition(int, int);
+    template<class T>
+    void outputText(T text) {
+        std::ostringstream ss;
+        ss << text;
+        std::string s(ss.str());
+
+        int i = 0;
+        for (i = 0; i < s.size(); i++)
+        {
+            render_buffer[currentTextY * m_scr_width + currentTextX + i].Char.AsciiChar = s[i];
+            render_buffer_depth[currentTextY * m_scr_width + currentTextX + i] = 255;
+        }
+        currentTextX += i;
+    }
+
     void render();
-    void screen_clear();
-    void set_camera_position(Vector2f);
+    void clear();
+    void set_camera_position(const Vector2f&);
     Vector2f get_camera_position();
 };
 
