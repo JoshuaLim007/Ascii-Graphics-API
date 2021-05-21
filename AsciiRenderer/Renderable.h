@@ -12,7 +12,7 @@ private:
     void Init();
     void Dump();
     unsigned int DrawOrder = 0;
-    Sprite DrawMaterial;
+    Sprite Sprites;
 
 
 protected:
@@ -26,10 +26,9 @@ public:
 
     Sprite get_material() const;
     void set_material(Sprite);
+
     void set_draw_order(unsigned int) ;
     unsigned int get_draw_order() const;
-    //Vector2f get_position();
-    //void set_position(const Vector2f &);
     virtual void on_preRender(double) = 0;
 };
 

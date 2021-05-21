@@ -32,18 +32,23 @@ bool Sprite::set_texture(char* filePath) {
         delete[] texture;
         texture = NULL;
     }
-    texture = new color[width * height];
+    int size = width * height;
+    texture = new color[size];
     const int paddingAmount = ((4 - (width * 3) % 4) % 4);
 
-    for (size_t y = 0; y < height; y++)
+    for (int y = 0; y < height; y++)
     {
-        for (size_t x = 0; x < width; x++)
+        for (int x = 0; x < width; x++)
         {
-            int_fast8_t color[3];
+            unsigned char color[3];
             f.read(reinterpret_cast<char*>(color), 3);
-            texture[y * m_width + x].r = static_cast<float>(color[2]) / 255.0f;
-            texture[y * m_width + x].g = static_cast<float>(color[1]) / 255.0f;
-            texture[y * m_width + x].b = static_cast<float>(color[0]) / 255.0f;
+
+            //f.read((char*)(color), 3);
+            int index = (size - (y * m_width + x)) - 1;
+            texture[index].r = static_cast<float>(color[2]) / 255.0f;
+            texture[index].g = static_cast<float>(color[1]) / 255.0f;
+            texture[index].b = static_cast<float>(color[0]) / 255.0f;
+            texture[index].l = get_luminance_value(texture[index].r, texture[index].g, texture[index].b);
         }
         f.ignore(paddingAmount);
     }
@@ -64,4 +69,15 @@ unsigned int Sprite::height()const {
 void Sprite::flush_texture() {
     delete[] texture;
     texture = NULL;
+}
+float Sprite::get_luminance_value(float r, float g, float b) {
+    return (0.2126f * sRGBtoLin(r) + 0.7152f * sRGBtoLin(g) + 0.0722f * sRGBtoLin(b));
+}
+float Sprite::sRGBtoLin(float channel) {
+    if (channel <= 0.04045) {
+        return channel / 12.92f;
+    }
+    else {
+        return pow(((channel + 0.055f) / 1.055f), 2.4f);
+    }
 }

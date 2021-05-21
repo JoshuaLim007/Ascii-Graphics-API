@@ -154,29 +154,21 @@ Vector2f Renderer::get_camera_position()
 void Renderer::add_renderable_to_render_stack(Renderable *renderObject)
 {
     toRenders.push_back(renderObject);
-    /*
-    if(toRenders.size() == 0){
-        toRenders.push_back(renderObject);
-    }
-    else {
-        auto temp = toRenders.begin();
-        for (int i = 0; temp != toRenders.end(); ++temp) {
-            if (*temp != NULL) {
-                if (renderObject->get_draw_order() <= (*temp)->get_draw_order()) {
-                    toRenders.insert(temp, renderObject);
-                }
-            }
-            else {
-                toRenders.insert(temp, renderObject);
-            }
-        }
-    }
-    */
 }
 void Renderer::remove_renderable_to_render_stack(Renderable* renderObject)
 {   
     auto removed = std::remove(toRenders.begin(), toRenders.end(), renderObject);
     toRenders.erase(removed, toRenders.end());
+}
+char Renderer::translate_lc(float luminance) {
+    luminance *= 10;
+    if (luminance > 10) {
+        luminance = 10;
+    }
+    else if (luminance < 0) {
+        luminance = 0;
+    }
+    return shadeLookUp[(int)luminance];
 }
 void Renderer::draw_sprite_material(const Renderable& toDraw)
 {
@@ -187,28 +179,46 @@ void Renderer::draw_sprite_material(const Renderable& toDraw)
     Vector2f wp(toDraw.WorldPosition.x, -toDraw.WorldPosition.y);
     Vector2f cp(CameraWorldPosition.x, -CameraWorldPosition.y);
 
+
     auto position = wp + toDraw.get_material().LocalSpacePosition - cp + Vector2f(m_scr_width * 0.5, m_scr_height * 0.5);
-    float scalerX = toDraw.Scale.x;
-    float scalerY = toDraw.Scale.y;
+    float scalerX = toDraw.Scale.x * 0.5;
+    float scalerY = toDraw.Scale.y * 0.5;
 
-    float leftBound = position.x - toDraw.get_material().width() * scalerX;
-    float rightBound = position.x + toDraw.get_material().width() * scalerX;
-    float upBound = position.y - toDraw.get_material().height() * scalerY;
-    float downBound = position.y + toDraw.get_material().height() * scalerY;
+    float wsprite = toDraw.get_material().width();
+    float hsprite = toDraw.get_material().height();
+    int maxIndexSprite = wsprite * hsprite;
 
-    for (int y = upBound; y < downBound; y ++)
+    float leftBound = position.x - wsprite * scalerX;
+    float rightBound = position.x + wsprite * scalerX;
+    float upBound = position.y - hsprite * scalerY;
+    float downBound = position.y + hsprite * scalerY;
+
+    float xDelta = wsprite / (rightBound - leftBound);
+    float yDelta = hsprite / (downBound - upBound);
+    
+    auto texture = toDraw.get_material().get_texture();
+
+    float sy = 0;
+    for (int y = upBound; y < downBound; y++)
     {
-        for (int x = leftBound; x < rightBound; x ++)
+        float sx = 0;
+        for (int x = leftBound; x < rightBound; x++)
         {
             if (y >= 0 && y < m_scr_height && x >= 0 && x < m_scr_width) {
                 int index = y * m_scr_width + x;
+                int sindex = (int)sy * wsprite + (int)sx;
                 if (render_buffer_depth[index] <= toDraw.get_draw_order()) {
-                    render_buffer[index].Char.AsciiChar = ' ';
-                    render_buffer[index].Attributes = 0x103F;
+                    if (sindex > maxIndexSprite) {
+                        sindex = maxIndexSprite;
+                    }
+                    render_buffer[index].Char.AsciiChar = translate_lc(texture[sindex].l);
+                    render_buffer[index].Attributes = 15;
                     render_buffer_depth[index] = toDraw.get_draw_order();
                 }
             }
+            sx += xDelta;
         }
+        sy += yDelta;
     }
     
 }
