@@ -9,6 +9,12 @@ struct Vector2f
     Vector2f();
     Vector2f(const Vector2f &);
     Vector2f(float, float);
+    Vector2f operator+(const Vector2f& o) const{
+        return Vector2f(x + o.x, y + o.y);
+    }
+    Vector2f operator-(const Vector2f& o) const{
+        return Vector2f(x - o.x, y - o.y);
+    }
     static Vector2f lerp(const Vector2f &, const Vector2f &, float);
     static float magnitude(const Vector2f &);
     static Vector2f normalize(const Vector2f &);

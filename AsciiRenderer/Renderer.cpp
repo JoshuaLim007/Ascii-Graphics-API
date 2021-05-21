@@ -1,14 +1,18 @@
 #include "Renderer.h"
+#include "InputManager.h"
+#include <algorithm>
 
 Renderer *Renderer::Instance = NULL;
 Renderer::Renderer()
 {
     Init();
 }
-Renderer::Renderer(uint_fast16_t camVerticalSize, uint_fast16_t camHorizontalSize)
+Renderer::Renderer(uint_fast16_t camVerticalSize, uint_fast16_t camHorizontalSize, uint_fast8_t fontX, uint_fast8_t fontY)
 {
     m_scr_height = camVerticalSize;
     m_scr_width = camHorizontalSize;
+    x_fontSize = fontX;
+    y_fontSize = fontY;
     Init();
 }
 void Renderer::Init()
@@ -21,7 +25,7 @@ void Renderer::Init()
         throw std::runtime_error("Renderer Instance Exists!");
         return;
     }
-    create_window_console(m_scr_width, m_scr_height, 4, 4);
+    create_window_console(m_scr_width, m_scr_height, x_fontSize, y_fontSize);
 }
 
 int Renderer::create_window_console(int width, int height, int fontw, int fonth)
@@ -81,8 +85,11 @@ int Renderer::create_window_console(int width, int height, int fontw, int fonth)
     }
 #pragma endregion
 
-    bufScreen = new CHAR_INFO[m_scr_width * m_scr_height];
-    memset(bufScreen, 0, sizeof(CHAR_INFO) * m_scr_width * m_scr_height);
+    render_buffer = new CHAR_INFO[m_scr_width * m_scr_height];
+    render_buffer_depth = new unsigned int[m_scr_width * m_scr_height];
+    //bufScreen = new CHAR_INFO[m_scr_width * m_scr_height];
+    memset(render_buffer, 0, sizeof(CHAR_INFO) * m_scr_width * m_scr_height);
+    memset(render_buffer_depth, 0, sizeof(unsigned int) * m_scr_width * m_scr_height);
 
     HWND consoleWindow = GetConsoleWindow();
     SetWindowLong(consoleWindow, GWL_STYLE, GetWindowLong(consoleWindow, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX); //prevent from being resized
@@ -92,7 +99,8 @@ int Renderer::create_window_console(int width, int height, int fontw, int fonth)
 
 Renderer::~Renderer()
 {
-    delete[] bufScreen;
+    delete[] render_buffer;
+    delete[] render_buffer_depth;
     clear();
 }
 Renderer *Renderer::get_instance()
@@ -101,21 +109,40 @@ Renderer *Renderer::get_instance()
 }
 void Renderer::render()
 {
+    setOutputTextPosition(1, 1);
+    outputText(1/frameTime);
+    outputText(" FPS");
+    setOutputTextPosition(1, 2);
+    outputText(frameTime);
+    outputText(" MS");
+
+    Input::Tick();
     for (auto it : toRenders) {
-        it->on_draw();
+        it->on_preRender(frameTime);
+        draw_sprite_material(*it);
     }
-    WriteConsoleOutput(hConsole, bufScreen, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
+
+    WriteConsoleOutput(hConsole, render_buffer, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
+    end_time = std::chrono::high_resolution_clock::now();
+    auto t = (end_time - start_time);
+    frameTime = t.count() / 1000000000.0;
+
+}
+void Renderer::setOutputTextPosition(int x, int y) {
+    currentTextX = x;
+    currentTextY = y;
 }
 void Renderer::clear()
-{
+{   
+    start_time = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < m_scr_height * m_scr_width; i++)
     {
-        bufScreen[i].Char.AsciiChar = ' ';
-        bufScreen[i].Attributes = 0x000F;
+        render_buffer[i].Char.AsciiChar = ' ';
+        render_buffer[i].Attributes = 0x000F;
+        render_buffer_depth[i] = 0;
     }
-    //WriteConsoleOutput(hConsole, bufScreen, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
+    //WriteConsoleOutput(hConsole, render_buffer, {(short)m_scr_width, (short)m_scr_height}, {0, 0}, &rectWindow);
 }
-
 void Renderer::set_camera_position(const Vector2f& pos)
 {
     CameraWorldPosition = pos;
@@ -124,43 +151,64 @@ Vector2f Renderer::get_camera_position()
 {
     return CameraWorldPosition;
 }
-std::vector<Renderable*>::iterator Renderer::add_renderable_to_render_stack(Renderable *renderObject)
+void Renderer::add_renderable_to_render_stack(Renderable *renderObject)
 {
-    Renderable* last = NULL;
-    auto end = toRenders.begin();
-    for (int i = 0; end != toRenders.end(); end++) {
-        if (*end != NULL) {
-            if (renderObject->get_draw_order() <= (*end)->get_draw_order()) {
-                auto itr = toRenders.insert(end, renderObject);
-                return itr;
+    toRenders.push_back(renderObject);
+    /*
+    if(toRenders.size() == 0){
+        toRenders.push_back(renderObject);
+    }
+    else {
+        auto temp = toRenders.begin();
+        for (int i = 0; temp != toRenders.end(); ++temp) {
+            if (*temp != NULL) {
+                if (renderObject->get_draw_order() <= (*temp)->get_draw_order()) {
+                    toRenders.insert(temp, renderObject);
+                }
+            }
+            else {
+                toRenders.insert(temp, renderObject);
             }
         }
-        else {
-            auto itr = toRenders.insert(end, renderObject);
-            return itr;
+    }
+    */
+}
+void Renderer::remove_renderable_to_render_stack(Renderable* renderObject)
+{   
+    auto removed = std::remove(toRenders.begin(), toRenders.end(), renderObject);
+    toRenders.erase(removed, toRenders.end());
+}
+void Renderer::draw_sprite_material(const Renderable& toDraw)
+{
+    //0 - 200
+    //0 - 300
+    
+    //world space locations
+    Vector2f wp(toDraw.WorldPosition.x, -toDraw.WorldPosition.y);
+    Vector2f cp(CameraWorldPosition.x, -CameraWorldPosition.y);
+
+    auto position = wp + toDraw.get_material().LocalSpacePosition - cp + Vector2f(m_scr_width * 0.5, m_scr_height * 0.5);
+    float scalerX = toDraw.Scale.x;
+    float scalerY = toDraw.Scale.y;
+
+    float leftBound = position.x - toDraw.get_material().width() * scalerX;
+    float rightBound = position.x + toDraw.get_material().width() * scalerX;
+    float upBound = position.y - toDraw.get_material().height() * scalerY;
+    float downBound = position.y + toDraw.get_material().height() * scalerY;
+
+    for (int y = upBound; y < downBound; y ++)
+    {
+        for (int x = leftBound; x < rightBound; x ++)
+        {
+            if (y >= 0 && y < m_scr_height && x >= 0 && x < m_scr_width) {
+                int index = y * m_scr_width + x;
+                if (render_buffer_depth[index] <= toDraw.get_draw_order()) {
+                    render_buffer[index].Char.AsciiChar = ' ';
+                    render_buffer[index].Attributes = 0x103F;
+                    render_buffer_depth[index] = toDraw.get_draw_order();
+                }
+            }
         }
     }
-    //toRenders.insert(std::pair<int, Renderable*>(renderObject->get_draw_order(), renderObject));
-}
-void Renderer::remove_renderable_to_render_stack(std::vector<Renderable*>::iterator renderObject)
-{
-    toRenders.erase(renderObject);
-    //toRenders.erase(renderObject->get_draw_order());
-}
-void Renderer::draw_sprite_material(Vector2f worldPosition, const Sprite &toDraw)
-{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 }

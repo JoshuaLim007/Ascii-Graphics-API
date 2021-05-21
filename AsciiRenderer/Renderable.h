@@ -4,6 +4,7 @@
 
 #include "Sprite.h"
 #include <vector>
+#include "InputManager.h"
 
 class Renderable
 {
@@ -11,9 +12,8 @@ private:
     void Init();
     void Dump();
     unsigned int DrawOrder = 0;
-    std::vector<Renderable*>::iterator m_itrRef;
     Sprite DrawMaterial;
-    Vector2f WorldPosition = Vector2f::ZERO;
+
 
 protected:
     Renderable(Vector2f, Sprite);
@@ -21,13 +21,16 @@ protected:
     ~Renderable();
 
 public:
-    Sprite get_material();
+    Vector2f Scale = Vector2f::IDENTITY;
+    Vector2f WorldPosition = Vector2f::ZERO;
+
+    Sprite get_material() const;
     void set_material(Sprite);
-    void set_draw_order(unsigned int);
-    unsigned int get_draw_order();
-    Vector2f get_position();
-    void set_position(const Vector2f &);
-    virtual void on_draw() {};
+    void set_draw_order(unsigned int) ;
+    unsigned int get_draw_order() const;
+    //Vector2f get_position();
+    //void set_position(const Vector2f &);
+    virtual void on_preRender(double) = 0;
 };
 
 #endif
