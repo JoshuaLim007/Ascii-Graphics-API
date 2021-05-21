@@ -1,12 +1,7 @@
 #include "Renderable.h"
 #include "Renderer.h"
 
-Renderable::Renderable(Vector2f worldPosition, Quad drawMaterial) : WorldPosition(worldPosition), DrawMaterial(drawMaterial)
-{
-    Init();
-}
-
-Renderable::Renderable(const Renderable &other) : DrawMaterial(other.DrawMaterial), WorldPosition(other.WorldPosition)
+Renderable::Renderable(Vector2f worldPosition, Sprite drawMaterial) : WorldPosition(worldPosition), DrawMaterial(drawMaterial)
 {
     Init();
 }
@@ -14,13 +9,12 @@ Renderable::Renderable()
 {
     Init();
 }
-Renderable &Renderable::operator=(const Renderable &other)
+Renderable::~Renderable()
 {
-
-    DrawMaterial = other.DrawMaterial;
-    WorldPosition = other.WorldPosition;
-    return *this;
+    Dump();
 }
+
+/*
 Vector2f Renderable::get_position()
 {
     return WorldPosition;
@@ -29,11 +23,13 @@ void Renderable::set_position(const Vector2f &pos)
 {
     WorldPosition = pos;
 }
-Quad Renderable::get_material()
+*/
+
+Sprite Renderable::get_material() const
 {
     return DrawMaterial;
 }
-void Renderable::set_material(Quad mat)
+void Renderable::set_material(Sprite mat)
 {
     DrawMaterial = mat;
 }
@@ -41,11 +37,14 @@ void Renderable::set_draw_order(unsigned int value)
 {
     DrawOrder = value;
 }
-unsigned int Renderable::get_draw_order()
+unsigned int Renderable::get_draw_order() const
 {
     return DrawOrder;
 }
 void Renderable::Init()
 {
-    Renderer::get_instance()->add_rendereable_to_render_stack(this);
+    Renderer::get_instance()->add_renderable_to_render_stack(this);
+}
+void Renderable::Dump() {
+    Renderer::get_instance()->remove_renderable_to_render_stack(this);
 }
