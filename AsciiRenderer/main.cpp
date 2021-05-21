@@ -18,16 +18,16 @@ public:
 A::A()
 {
     Sprite temp;
-    temp.set_texture("\TestBMP.bmp");
+    temp.set_texture("\TestBMP2.bmp");
     set_material(temp);
     set_draw_order(rand() % 10);
-    Scale.x = .005;
-    Scale.y = .005;
+    Scale.x = .5;
+    Scale.y = .5;
 }
 A::A(int x, int y)
 {
     Sprite temp;
-    temp.set_texture("\TestBMP.bmp");
+    temp.set_texture("\TestBMP2.bmp");
     set_material(temp);
     set_draw_order(rand() % 10);
     Scale.x = .05;
@@ -73,6 +73,15 @@ void A::on_preRender(double delta)
         auto d = Renderer::get_instance()->get_camera_position();
         d.y -= speed * delta;
         Renderer::get_instance()->set_camera_position(d);
+    }
+    if (Input::GetKey(VK_RIGHT)) {
+        Scale.x += delta;
+        Scale.y += delta;
+
+    }
+    if (Input::GetKey(VK_LEFT)) {
+        Scale.x += -delta;
+        Scale.y += -delta;
     }
     WorldPosition.y += y_vel * delta;
 }

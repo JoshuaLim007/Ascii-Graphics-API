@@ -1,7 +1,7 @@
 #include "Renderable.h"
 #include "Renderer.h"
 
-Renderable::Renderable(Vector2f worldPosition, Sprite drawMaterial) : WorldPosition(worldPosition), DrawMaterial(drawMaterial)
+Renderable::Renderable(Vector2f worldPosition, Sprite drawMaterial) : WorldPosition(worldPosition), Sprites(drawMaterial)
 {
     Init();
 }
@@ -14,24 +14,13 @@ Renderable::~Renderable()
     Dump();
 }
 
-/*
-Vector2f Renderable::get_position()
-{
-    return WorldPosition;
-}
-void Renderable::set_position(const Vector2f &pos)
-{
-    WorldPosition = pos;
-}
-*/
-
 Sprite Renderable::get_material() const
 {
-    return DrawMaterial;
+    return Sprites;
 }
 void Renderable::set_material(Sprite mat)
 {
-    DrawMaterial = mat;
+    Sprites = mat;
 }
 void Renderable::set_draw_order(unsigned int value)
 {

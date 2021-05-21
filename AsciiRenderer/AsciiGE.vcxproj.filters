@@ -33,6 +33,9 @@
     <ClCompile Include="InputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Flipbook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderable.h">
@@ -53,9 +56,21 @@
     <ClInclude Include="InputManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Flipbook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="TestBMP.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="TestBMP2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="TestBMP3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="TestBMP4.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

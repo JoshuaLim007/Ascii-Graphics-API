@@ -11,12 +11,15 @@ struct color {
     float r;
     float g;
     float b;
+    float l;
 };
 class Sprite
 {
 private:
     color* texture = NULL;
     unsigned int m_width = 0, m_height = 0;
+    float get_luminance_value(float, float, float);
+    float sRGBtoLin(float);
 public:
 
     Vector2f LocalSpacePosition = Vector2f::ZERO;

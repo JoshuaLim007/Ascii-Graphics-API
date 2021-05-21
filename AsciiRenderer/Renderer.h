@@ -15,6 +15,7 @@
 class Renderer
 {
 private:
+    char shadeLookUp[10]{ ' ','.',':','-','=','+','*','#','%','@' };
     static Renderer *Instance;
     std::vector<Renderable*> toRenders;
 
@@ -31,14 +32,14 @@ private:
     unsigned int* render_buffer_depth = NULL;
     int currentTextX = 0;
     int currentTextY = 0;
-
+    float timer = 16;
 
     SMALL_RECT rectWindow;
     HANDLE hConsole;
     int create_window_console(int, int, int, int);
     void draw_sprite_material(const Renderable& toDraw);
     void Init();
-
+    char translate_lc(float);
 public:
     static Renderer *get_instance();
     Renderer();
@@ -63,7 +64,7 @@ public:
         }
         currentTextX += i;
     }
-
+    
     void render();
     void clear();
     void set_camera_position(const Vector2f&);
