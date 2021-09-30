@@ -205,7 +205,7 @@ void Renderer::draw_sprite_material(const Renderable& toDraw)
         for (int x = leftBound; x < rightBound; x++)
         {
             if (y >= 0 && y < m_scr_height && x >= 0 && x < m_scr_width) {
-                int index = y * m_scr_width + x;
+                int index = y * m_scr_width - x;
                 int sindex = (int)sy * wsprite + (int)sx;
                 if (render_buffer_depth[index] <= toDraw.get_draw_order()) {
                     if (sindex > maxIndexSprite) {

@@ -37,3 +37,14 @@ void Renderable::Init()
 void Renderable::Dump() {
     Renderer::get_instance()->remove_renderable_to_render_stack(this);
 }
+Vector2f Renderable::get_screen_position() {
+    auto renderer = Renderer::get_instance();
+    auto camPos = renderer->get_camera_position();
+    auto worldCamPos = camPos - WorldPosition;
+
+    Vector2f wp(WorldPosition.x, -WorldPosition.y);
+    Vector2f cp(camPos.x, -camPos.y);
+
+    auto position = wp - cp + Vector2f(renderer->get_screen_width() * 0.5, renderer->get_screen_height() * 0.5);
+    return position;
+}
