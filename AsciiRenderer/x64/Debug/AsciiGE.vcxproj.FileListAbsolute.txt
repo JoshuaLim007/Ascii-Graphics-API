@@ -1,1 +1,3 @@
 E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe
+D:\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe
+D:\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.pdb

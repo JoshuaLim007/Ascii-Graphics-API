@@ -1,7 +1,4 @@
-﻿  Renderable.cpp
-  Renderer.cpp
-  main.cpp
-E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(21,22): warning C4129: 'T': unrecognized character escape sequence
-E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(30,22): warning C4129: 'T': unrecognized character escape sequence
-  Generating Code...
-  AsciiGE.vcxproj -> E:\Users\joshu\Documents\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe
+﻿  main.cpp
+D:\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(23,22): warning C4129: 'd': unrecognized character escape sequence
+D:\GitHub\Ascii-Graphics-API\AsciiRenderer\main.cpp(34,22): warning C4129: 'd': unrecognized character escape sequence
+  AsciiGE.vcxproj -> D:\GitHub\Ascii-Graphics-API\AsciiRenderer\x64\Debug\AsciiGE.exe

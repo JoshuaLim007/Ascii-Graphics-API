@@ -27,6 +27,9 @@ public:
     Sprite get_material() const;
     void set_material(Sprite);
 
+    Vector2f get_screen_position();
+
+
     void set_draw_order(unsigned int) ;
     unsigned int get_draw_order() const;
     virtual void on_preRender(double) = 0;

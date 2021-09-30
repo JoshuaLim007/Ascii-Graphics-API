@@ -11,6 +11,7 @@
 #include <Windows.h>
 #include <chrono>
 #include <ctime>
+#include <sstream>
 
 class Renderer
 {
@@ -46,7 +47,12 @@ public:
     ~Renderer();
     Renderer(uint_fast16_t, uint_fast16_t, uint_fast8_t, uint_fast8_t);
     void add_renderable_to_render_stack(Renderable*);
-    
+    uint_fast16_t get_screen_height() {
+        return m_scr_height;
+    }
+    uint_fast16_t get_screen_width() {
+        return m_scr_width;
+    }
     void remove_renderable_to_render_stack(Renderable*);
 
     void setOutputTextPosition(int, int);

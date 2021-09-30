@@ -115,6 +115,7 @@
     <ClInclude Include="Vector2f.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="dvd_logo.bmp" />
     <Image Include="TestBMP.bmp" />
     <Image Include="TestBMP2.bmp" />
     <Image Include="TestBMP3.bmp" />

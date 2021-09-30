@@ -47,3 +47,9 @@ Vector2f Vector2f::normalize(const Vector2f &value)
     float mag = magnitude(value);
     return Vector2f(value.x / mag, value.y / mag);
 }
+float Vector2f::dot(const Vector2f& lhs, const Vector2f& rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y;
+}
+Vector2f Vector2f::reflect(const Vector2f& o, const Vector2f& normal) {
+    return o - normal * 2 * dot(o, normal);
+}

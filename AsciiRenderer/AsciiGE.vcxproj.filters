@@ -73,5 +73,8 @@
     <Image Include="TestBMP4.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="dvd_logo.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
